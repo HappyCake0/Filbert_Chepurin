@@ -1,0 +1,108 @@
+﻿@model IEnumerable<Domain.Person>
+@{
+    ViewData["Title"] = "Главная страница";
+}
+
+<style >
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+}
+
+.table th, .table td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #2e7d32;
+}
+
+.table thead {
+    background-color: #388e3c;
+    color: white;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #e8f5e9;
+}
+
+.table tbody tr:hover {
+    background-color: #c8e6c9;
+}
+
+.table ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+    .table ul li {
+        background-color: #a5d6a7;
+        margin: 5px 0;
+        padding: 8px;
+        border-radius: 5px;
+    }
+
+</style >
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ФИО</th>
+            <th>Дата Рождения</th>
+            <th>Паспорт</th>
+            <th>Долговые обязательства</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var person in Model)
+        {
+            <tr>
+                <td>@(person.F + " " + person.I + " " + person.O)</td>
+                <td>@FormatDate(person.BirthDate)</td>
+                <td>@FormatPassport(person.Passport?.Series, person.Passport?.Number)</td>
+                <td>
+                    <ul>
+                        @foreach (var debt in person.Debts)
+                        {
+                            <li>
+                                Договор: @debt.ContractNumber, Дата: @FormatDate(debt.ContractDt), Сумма: @FormatCurrency(debt.DebtSum)
+                            </li>
+                        }
+                    </ul>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@*по-хорошему нужно вынести в отдельную папку->класс а-ля ViewFormatHelper, но у меня возникли проблемы с видимостью этого класса, не успел решить :( *@
+@functions {
+    public static string FormatDate(string date)
+    {
+        if (DateTime.TryParse(date, out var parsedDate))
+        {
+            return parsedDate.ToString("dd.MM.yyyy");
+        }
+        return date;
+    }
+
+    public static string FormatCurrency(string amount)
+    {
+        if (decimal.TryParse(amount, out var parsedAmount))
+        {
+            return string.Format("{0:N2} руб.", parsedAmount);
+        }
+        return amount;
+    }
+
+    public static string FormatPassport(string series, string number)
+    {
+        if (string.IsNullOrWhiteSpace(series) || series.Length != 4 || string.IsNullOrWhiteSpace(number))
+        {
+            return string.Empty;
+        }
+
+        return $"{series.Substring(0, 2)} {series.Substring(2, 2)} {number}";
+    }
+}
